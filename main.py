@@ -122,20 +122,20 @@ def signup():
     return bottle.static_file("signup.html", root="./static")
 
 @bottle.post("/signup1")
-@bottle.view("signup")
+@bottle.view("./tpl/signup")
 def signup1():
     user_name = bottle.request.params.username
     password = bottle.request.params.password
     mail = bottle.request.params.mail
     data = {"user_name": user_name, "password": password, "mail": mail}
     if user_name == admin_name or password == admin_password or mail == admin_email:
-        return bottle.template("error_signup.tpl", flag = 2)
+        return bottle.template("./tpl/error_signup", flag = 2)
     with env1.begin() as txn:
         cur = txn.cursor()
         for k, v in cur:
             d = json.loads(v.decode("utf8"))
             if(d["mail"] == mail):
-                return bottle.template("error_signup.tpl", flag = 2)
+                return bottle.template("./tpl/error_signup", flag = 2)
     with env1.begin(write=True) as txn:
         id = get_id(txn)
         txn.put(id.encode("utf8"), json.dumps(data).encode("utf8"))
@@ -160,7 +160,7 @@ def do_login():
             d = json.loads(v.decode("utf8"))
             if(d["user_name"] == user_name and d["password"] == password and d["mail"] == mail):
                 return bottle.redirect("/entry/" + str(k.decode("utf8")))
-    return bottle.template("error_login.tpl")
+    return bottle.template("./tpl/error_login")
 
 
 @bottle.route("/entry/<user_id>")
@@ -195,10 +195,10 @@ def entry(user_id):
             tmp_data.update({str(hour): room})
         data += [tmp_data]
         d_today += datetime.timedelta(days=1)
-    return bottle.template("entry.tpl", data = data)
+    return bottle.template("./tpl/entry", data = data)
 
 @bottle.post("/submit/<user_id>")
-@bottle.view("submit")
+@bottle.view("./tpl/submit")
 def submit(user_id):
     title = bottle.request.params.title
     name = ""
@@ -216,9 +216,9 @@ def submit(user_id):
     room = str(tmp[4])
     data = {"title": title, "name": name, "year": year, "month": month, "day": day, "hour": hour, "room": room, "user_id": user_id}
     if(is_ok_room(year, month, day, hour, room) == False):
-        return bottle.template("error_submit_overlapping_time", user_id = user_id)
+        return bottle.template("./tpl/error_submit_overlapping_time", user_id = user_id)
     elif(is_ok_time(year, month, day, hour) == False):
-        return bottle.template("error_submit_not_exist_time", user_id = user_id)
+        return bottle.template("./tpl/error_submit_not_exist_time", user_id = user_id)
     with env.begin(write=True) as txn:
         id = get_id(txn)
         txn.put(id.encode("utf8"), json.dumps(data).encode("utf8"))
@@ -228,7 +228,7 @@ def submit(user_id):
 
 @bottle.route("/list/<user_id>")
 
-@bottle.view("list")
+@bottle.view("./tpl/list")
 def list(user_id):
     data = []
     with env.begin(write=True) as txn:
@@ -253,10 +253,10 @@ def list(user_id):
 
 @bottle.route("/search/<user_id>")
 def root(user_id):
-    return bottle.template("search", user_id = user_id)
+    return bottle.template("./tpl/search", user_id = user_id)
 
 @bottle.post("/search_result/<user_id>")
-@bottle.view("search_result")
+@bottle.view("./tpl/search_result")
 def list(user_id):
     name = ""
     room = ""
@@ -268,7 +268,7 @@ def list(user_id):
     month = ""
     day = ""
     if(name == "" and room == "" and date == ""):
-        return bottle.template("error_search", user_id = user_id)
+        return bottle.template("./tpl/error_search", user_id = user_id)
     if(not date == ""):
         tmp = date.split("-")
         year = int(tmp[0])
@@ -291,7 +291,7 @@ def list(user_id):
 @bottle.route("/delete/<user_id>")
 
 @bottle.post("/delete/<user_id>")
-@bottle.view("delete")
+@bottle.view("./tpl/delete")
 def delete(user_id):
     name = bottle.request.params.name
     room = bottle.request.params.room
@@ -315,7 +315,7 @@ def delete(user_id):
 @bottle.route("/change/<user_id>")
 
 @bottle.post("/change/<user_id>")
-@bottle.view("change")
+@bottle.view("./tpl/change")
 def delete(user_id):
     title = bottle.request.params.title
     name = bottle.request.params.name
@@ -332,7 +332,7 @@ def delete(user_id):
 @bottle.route("/change_result/<user_id>")
 
 @bottle.post("/change_result/<user_id>")
-@bottle.view("change_result")
+@bottle.view("./tpl/change_result")
 def change_result(user_id):
     #新規予約に使う
     title = bottle.request.params.title
@@ -369,9 +369,9 @@ def change_result(user_id):
     data_reserve = {"title": title, "name": name, "year": year, "month": month, "day": day, "hour": hour, "room": room, "user_id": user_id}
     data.update({"title": title, "name": name, "year": year, "month": month, "day": day, "hour": hour, "room": room, "user_id": user_id})
     if(is_ok_room(year, month, day, hour, room) == False):
-        return bottle.template("error_submit_overlapping_time", user_id = user_id)
+        return bottle.template("./tpl/error_submit_overlapping_time", user_id = user_id)
     elif(is_ok_time(year, month, day, hour) == False):
-        return bottle.template("error_submit_not_exist_time", user_id = user_id)
+        return bottle.template("./tpl/error_submit_not_exist_time", user_id = user_id)
     with env.begin(write=True) as txn:
         id = get_id(txn)
         txn.put(id.encode("utf8"), json.dumps(data_reserve).encode("utf8"))
